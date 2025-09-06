@@ -77,4 +77,53 @@ def submit_quiz(quiz_id):
     
     try:
         with get_db_cursor() as cursor:
+                        # 获取正确答案
+            cursor.execute("""
+                SELECT question_id, correct_opt, score
+                FROM quiz_question
+                WHERE quiz_id = %s
+            """, (quiz_id,))
             
+            correct_answers = {q['question_id']: q for q in cursor.fetchall()}
+            
+            # 计算得分
+            total_score = 0
+            correct_count = 0
+            total_count = len(correct_answers)
+            
+            for question_id, correct_info in correct_answers.items():
+                if str(question_id) in answers:
+                    if answers[str(question_id)] == correct_info['correct_opt']:
+                        total_score += correct_info['score']
+                        correct_count += 1
+            
+            # 保存测验结果
+            cursor.execute("""
+                INSERT INTO quiz_result (user_id, quiz_id, score, correct_cnt, total_cnt)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (user_id, quiz_id, total_score, correct_count, total_count))
+            
+            # 计算准确率
+            accuracy = round(correct_count / total_count * 100, 2) if total_count > 0 else 0
+            
+            return jsonify(success_response({
+                "score": total_score,
+                "correct_count": correct_count,
+                "total_count": total_count,
+                "accuracy": accuracy,
+                "level": get_level_by_accuracy(accuracy)
+            }, "测验提交成功"))
+            
+    except Exception as e:
+        return error_response(f"提交测验失败: {str(e)}", 500)
+
+def get_level_by_accuracy(accuracy):
+    """根据准确率返回等级"""
+    if accuracy >= 90:
+        return "Excellent"
+    elif accuracy >= 75:
+        return "Good"
+    elif accuracy >= 60:
+        return "Pass"
+    else:
+        return "Fail"
