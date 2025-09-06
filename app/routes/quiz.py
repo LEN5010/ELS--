@@ -77,7 +77,7 @@ def submit_quiz(quiz_id):
     
     try:
         with get_db_cursor() as cursor:
-                        # 获取正确答案
+            # 获取正确答案
             cursor.execute("""
                 SELECT question_id, correct_opt, score
                 FROM quiz_question
@@ -103,27 +103,25 @@ def submit_quiz(quiz_id):
                 VALUES (%s, %s, %s, %s, %s)
             """, (user_id, quiz_id, total_score, correct_count, total_count))
             
-            # 计算准确率
-            accuracy = round(correct_count / total_count * 100, 2) if total_count > 0 else 0
+            # 使用MySQL函数计算准确率
+            cursor.execute("""
+                SELECT fn_calc_accuracy(%s, %s) as accuracy
+            """, (correct_count, total_count))
+            accuracy = float(cursor.fetchone()['accuracy'])
+            
+            # 使用MySQL函数获取等级
+            cursor.execute("""
+                SELECT fn_get_level(%s) as level
+            """, (accuracy,))
+            level = cursor.fetchone()['level']
             
             return jsonify(success_response({
                 "score": total_score,
                 "correct_count": correct_count,
                 "total_count": total_count,
                 "accuracy": accuracy,
-                "level": get_level_by_accuracy(accuracy)
+                "level": level
             }, "测验提交成功"))
             
     except Exception as e:
         return error_response(f"提交测验失败: {str(e)}", 500)
-
-def get_level_by_accuracy(accuracy):
-    """根据准确率返回等级"""
-    if accuracy >= 90:
-        return "Excellent"
-    elif accuracy >= 75:
-        return "Good"
-    elif accuracy >= 60:
-        return "Pass"
-    else:
-        return "Fail"

@@ -1,16 +1,19 @@
-import hashlib
 import secrets
 import jwt
 from datetime import datetime, timedelta
 from flask import current_app
+from app.utils.db import get_db_cursor
 
 def generate_salt():
     """生成16字符的盐值"""
     return secrets.token_hex(8)
 
 def hash_password(password, salt):
-    """密码哈希函数"""
-    return hashlib.sha256((password + salt).encode()).hexdigest().upper()
+    """调用MySQL存储函数进行密码哈希"""
+    with get_db_cursor(commit=False) as cursor:
+        cursor.execute("SELECT hash_password(%s, %s) as pwd_hash", (password, salt))
+        result = cursor.fetchone()
+        return result['pwd_hash']
 
 def generate_token(user_id):
     """生成JWT token"""
