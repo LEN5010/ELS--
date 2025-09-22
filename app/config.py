@@ -6,7 +6,7 @@ load_dotenv()
 class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key')
     JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'jwt-secret-key')
-    
+
     # 数据库配置
     DB_CONFIG = {
         'host': os.getenv('DB_HOST', 'localhost'),
@@ -16,3 +16,6 @@ class Config:
         'database': os.getenv('DB_NAME', 'english_learning'),
         'charset': 'utf8mb4'
     }
+
+    # MongoDB配置
+    MONGO_URI = os.getenv('MONGO_URI', 'mongodb://localhost:27017/language_app_logs')

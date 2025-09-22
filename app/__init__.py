@@ -21,7 +21,8 @@ def create_app():
                 "learning": "/api/learning",
                 "quiz": "/api/quiz",
                 "community": "/api/community",
-                "admin": "/api/admin"  # 添加管理员端点
+                "admin": "/api/admin",  # 添加管理员端点
+                "logs": "/api/logs"     # 添加日志端点
             }
         })
     
@@ -33,12 +34,14 @@ def create_app():
     # 注册蓝图
     from app.routes import auth_bp, user_bp, learning_bp, quiz_bp, community_bp
     from app.routes.admin import admin_bp  # 导入管理员蓝图
-    
+    from app.routes.logs import logs_bp   # 导入日志蓝图
+
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(user_bp, url_prefix='/api/user')
     app.register_blueprint(learning_bp, url_prefix='/api/learning')
     app.register_blueprint(quiz_bp, url_prefix='/api/quiz')
     app.register_blueprint(community_bp, url_prefix='/api/community')
     app.register_blueprint(admin_bp, url_prefix='/api/admin')  # 注册管理员路由
+    app.register_blueprint(logs_bp, url_prefix='/api/logs')    # 注册日志路由
     
     return app
